@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import com.jfoenix.controls.JFXButton?>
+<?import com.jfoenix.controls.JFXTextField?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.geenie.reminder.fxml.controllers.LoginController">
+   <children>
+      <JFXTextField fx:id="usernameTF" layoutX="200.0" layoutY="84.0" maxWidth="218.0" minWidth="218.0" prefHeight="31.0" prefWidth="218.0" promptText="username" />
+      <JFXTextField fx:id="passwordTF" layoutX="200.0" layoutY="162.0" maxWidth="218.0" minWidth="218.0" prefHeight="31.0" prefWidth="218.0" promptText="password" />
+      <JFXButton layoutX="283.0" layoutY="292.0" onAction="#login" text="Login" />
+      <CheckBox fx:id="rememberMe" layoutX="247.0" layoutY="245.0" mnemonicParsing="false" text="Remember Me !" />
+   </children>
+</AnchorPane>
