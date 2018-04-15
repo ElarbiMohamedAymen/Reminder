@@ -16,10 +16,13 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Controller;
 
 import com.geenie.reminder.config.StageManager;
+import com.geenie.reminder.view.FxmlView;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import com.jfoenix.controls.JFXTextField;
+import javafx.scene.control.CheckBox;
 
 /**
  * FXML Controller class
@@ -33,6 +36,16 @@ public class LoginController implements Initializable {
 	@Lazy
 	@Autowired
 	private StageManager stageManager;
+	
+
+    @FXML
+    private JFXTextField usernameTF;
+
+    @FXML
+    private JFXTextField passwordTF;
+
+    @FXML
+    private CheckBox rememberMe;
 
 	/**
 	 * Initializes the controller class.
@@ -42,6 +55,8 @@ public class LoginController implements Initializable {
 	}
 	
 	@FXML
-	void login(ActionEvent event) {}
+	void login(ActionEvent event) {
+		stageManager.switchScene(FxmlView.MAIN_MENU);
+	}
 
 }
