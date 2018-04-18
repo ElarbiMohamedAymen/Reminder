@@ -7,7 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-import com.geenie.reminder.enumerations.State;
+import com.geenie.reminder.enumerations.Priority;
 
 @Entity
 public class Remind implements Serializable {
@@ -16,53 +16,74 @@ public class Remind implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private long idReminder;
-	private State state;
+	private String name;
+	private Priority priority;
 	private String description;
 	private String date;
 	private String time;
-	
+
 	public Remind() {
 		super();
 	}
+
 	public long getIdReminder() {
 		return idReminder;
 	}
+
 	public void setIdReminder(long idReminder) {
 		this.idReminder = idReminder;
 	}
-	public State getState() {
-		return state;
+
+	public Priority getPriority() {
+		return priority;
 	}
-	public void setState(State state) {
-		this.state = state;
+
+	public void setPriority(Priority priority) {
+		this.priority = priority;
 	}
+
 	public String getDescription() {
 		return description;
 	}
+
 	public void setDescription(String description) {
 		this.description = description;
 	}
+
 	public String getDate() {
 		return date;
 	}
+
 	public void setDate(String date) {
 		this.date = date;
 	}
+
 	public String getTime() {
 		return time;
 	}
+
 	public void setTime(String time) {
 		this.time = time;
 	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
 	@Override
 	public String toString() {
-		return "Remind [idReminder=" + idReminder + ", state=" + state + ", description=" + description + ", date="
-				+ date + ", time=" + time + "]";
+		return "Remind [idReminder=" + idReminder + ", name=" + name + ", priority=" + priority + ", description="
+				+ description + ", date=" + date + ", time=" + time + "]";
 	}
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
@@ -71,6 +92,7 @@ public class Remind implements Serializable {
 		result = prime * result + ((time == null) ? 0 : time.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -92,7 +114,5 @@ public class Remind implements Serializable {
 			return false;
 		return true;
 	}
-	
-	
 
 }
