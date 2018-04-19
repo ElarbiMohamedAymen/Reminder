@@ -3,10 +3,12 @@ package com.geenie.reminder.fxml.controllers;
 import java.net.URL;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -25,6 +27,7 @@ import com.jfoenix.controls.JFXTextArea;
 import com.jfoenix.controls.JFXTextField;
 
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
@@ -32,9 +35,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 
 @Controller
 public class MainMenuController implements Initializable {
@@ -79,7 +84,7 @@ public class MainMenuController implements Initializable {
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		switchPanes(mainPane.getId());
-		a();
+		createAllEventScrollingList();
 	}
 
 	@FXML
@@ -90,7 +95,8 @@ public class MainMenuController implements Initializable {
 		for (Priority state : states) {
 			stateAsList.add(state.getStatus());
 		}
-		priorityComboBox.getItems().addAll(stateAsList);
+		Set<String> foo = new HashSet<>(stateAsList);
+		priorityComboBox.getItems().addAll(foo);
 	}
 
 	@FXML
@@ -115,7 +121,7 @@ public class MainMenuController implements Initializable {
 	void backtoMain(ActionEvent event) {
 		switchPanes(mainPane.getId());
 		resetEventValue();
-		a();
+		createAllEventScrollingList();
 	}
 
 	@FXML
@@ -154,8 +160,14 @@ public class MainMenuController implements Initializable {
 	}
 
 	private boolean validateInputs() {
-		// TODO Auto-generated method stub
-		return true;
+
+		String eventName = eventNameTF.getText();
+		String priorityAsString = priorityComboBox.getSelectionModel().getSelectedItem();
+		String description = eventDescriptionTF.getText();
+		// String eventDate = eventDateTF.getValue().toString();
+		// String eventTime = eventTimeTF.getTime().toString();
+		return (eventName != null && priorityAsString != null && description != null
+				&& eventDateTF.getValue().toString() != null && eventTimeTF.getTime().toString() != null);
 	}
 
 	private void switchPanes(String name) {
@@ -172,19 +184,33 @@ public class MainMenuController implements Initializable {
 		menuBar.setVisible(true);
 	}
 
-	private void a() {
-		final Random rng = new Random();
+	private void createAllEventScrollingList() {
 		VBox content = new VBox(5);
 		ScrollPane scroller = new ScrollPane(content);
 		scroller.setFitToWidth(true);
 		List<Remind> lr = remindService.getAllEvents();
 		for (Remind remind : lr) {
-			System.out.println(remind);
 			AnchorPane anchorPane = new AnchorPane();
-			String style = String.format("-fx-background: rgb(%d, %d, %d);" + "-fx-background-color: -fx-background;",
-					rng.nextInt(256), rng.nextInt(256), rng.nextInt(256));
+			String style;
+			switch (remind.getPriority()) {
+			case NORMAL:
+				style = String.format("-fx-background: rgb(67, 140, 129);" + "-fx-background-color: -fx-background;");
+				break;
+			case PAS_VRAIMENT:
+				style = String.format("-fx-background: rgb(255, 0, 182);" + "-fx-background-color: -fx-background;");
+				break;
+			case URGENT:
+				style = String.format("-fx-background: rgb(255, 0, 0);" + "-fx-background-color: -fx-background;");
+				break;
+
+			default:
+				style = String.format("-fx-background: rgb(0, 0, 0);" + "-fx-background-color: -fx-background;");
+				break;
+			}
+
 			anchorPane.setStyle(style);
-			Label label = new Label(remind.getName() + (content.getChildren().size() + 1));
+			Label label = new Label(remind.getName() + "\n" + remind.getDescription());
+			label.setTextFill(Color.web("#ffffff"));
 			AnchorPane.setLeftAnchor(label, 5.0);
 			AnchorPane.setTopAnchor(label, 5.0);
 			Button button = new Button("Remove");
@@ -193,10 +219,15 @@ public class MainMenuController implements Initializable {
 			AnchorPane.setTopAnchor(button, 5.0);
 			AnchorPane.setBottomAnchor(button, 5.0);
 			anchorPane.getChildren().addAll(label, button);
+			anchorPane.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
+				public void handle(MouseEvent e) {
+					System.out.println(remind.getIdReminder());
+				}
+			});
 			content.getChildren().add(anchorPane);
 		}
-		scroller.setPrefHeight(568);
-		scroller.setPrefWidth(413);
+		scroller.setPrefHeight(mainPane.getPrefHeight());
+		scroller.setPrefWidth(mainPane.getPrefWidth());
 
 		BorderPane borderPane = new BorderPane(scroller, null, null, null, null);
 		mainPane.getChildren().add(borderPane);
