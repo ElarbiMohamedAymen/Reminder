@@ -27,9 +27,10 @@ public class Remind implements Serializable {
 	private String date;
 	private String time;
 	private State state;
+	private boolean visible;
 
 	public Remind() {
-		super();
+		this.visible = true;
 	}
 
 	public long getIdReminder() {
@@ -88,10 +89,18 @@ public class Remind implements Serializable {
 		this.state = state;
 	}
 
+	public boolean isVisible() {
+		return visible;
+	}
+
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
+
 	@Override
 	public String toString() {
 		return "Remind [idReminder=" + idReminder + ", name=" + name + ", priority=" + priority + ", description="
-				+ description + ", date=" + date + ", time=" + time + ", state=" + state + "]";
+				+ description + ", date=" + date + ", time=" + time + ", state=" + state + ", visible=" + visible + "]";
 	}
 
 	@Override
