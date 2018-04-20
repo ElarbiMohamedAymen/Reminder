@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.geenie.reminder.entities.Remind;
+import com.geenie.reminder.enumerations.State;
 import com.geenie.reminder.repository.ReminderRepository;
 import com.geenie.reminder.service.interfaces.IRemindMySQLService;
 
@@ -23,5 +24,16 @@ public class RemindMySQLServiceImpl implements IRemindMySQLService {
 	@Override
 	public List<Remind> getAllEvents() {
 		return (List<Remind>) reminderRepository.findAll();
+	}
+
+	@Override
+	public void updateEvent(Remind remind) {
+		if (remind.getState().equals(State.TODO)) {
+			remind.setState(State.DOING);
+		}else if (remind.getState().equals(State.DOING)) {
+			remind.setState(State.DONE);
+		}
+		reminderRepository.save(remind);
+
 	}
 }

@@ -12,5 +12,7 @@ public interface IRemindMySQLService {
 	public void addEvent(Remind remind);
 	
 	public List<Remind> getAllEvents();
+	
+	public void updateEvent(Remind remind);
 
 }
