@@ -36,4 +36,15 @@ public class RemindMySQLServiceImpl implements IRemindMySQLService {
 		reminderRepository.save(remind);
 
 	}
+
+	@Override
+	public void hideRemind(Remind remind) {
+		remind.setVisible(false);
+		addEvent(remind);
+	}
+
+	@Override
+	public List<Remind> getAllVisibleEvents() {
+		return reminderRepository.getAllVisibleEvents();
+	}
 }
