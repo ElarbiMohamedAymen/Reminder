@@ -8,6 +8,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 import com.geenie.reminder.enumerations.Priority;
+import com.geenie.reminder.enumerations.State;
 
 @Entity
 public class Remind implements Serializable {
@@ -25,6 +26,7 @@ public class Remind implements Serializable {
 	private String description;
 	private String date;
 	private String time;
+	private State state;
 
 	public Remind() {
 		super();
@@ -78,10 +80,18 @@ public class Remind implements Serializable {
 		this.name = name;
 	}
 
+	public State getState() {
+		return state;
+	}
+
+	public void setState(State state) {
+		this.state = state;
+	}
+
 	@Override
 	public String toString() {
 		return "Remind [idReminder=" + idReminder + ", name=" + name + ", priority=" + priority + ", description="
-				+ description + ", date=" + date + ", time=" + time + "]";
+				+ description + ", date=" + date + ", time=" + time + ", state=" + state + "]";
 	}
 
 	@Override
