@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -18,9 +17,10 @@ import org.springframework.stereotype.Controller;
 import com.geenie.reminder.config.StageManager;
 import com.geenie.reminder.entities.Remind;
 import com.geenie.reminder.enumerations.Priority;
+import com.geenie.reminder.enumerations.State;
 import com.geenie.reminder.service.interfaces.IRemindMySQLService;
 import com.geenie.reminder.view.FxmlView;
-
+import com.jfoenix.controls.JFXButton;
 import com.jfoenix.controls.JFXComboBox;
 import com.jfoenix.controls.JFXDatePicker;
 import com.jfoenix.controls.JFXTextArea;
@@ -31,10 +31,15 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -79,6 +84,9 @@ public class MainMenuController implements Initializable {
 	@FXML
 	private JFXDatePicker eventTimeTF;
 
+	@FXML
+	private JFXButton backBtn;
+
 	private List<String> stateAsList = new ArrayList<>();
 
 	@Override
@@ -97,6 +105,9 @@ public class MainMenuController implements Initializable {
 		}
 		Set<String> foo = new HashSet<>(stateAsList);
 		priorityComboBox.getItems().addAll(foo);
+		Image image = new Image("/buttons/circled-left-2-25.png");
+		backBtn.setGraphic(new ImageView(image));
+
 	}
 
 	@FXML
@@ -126,11 +137,11 @@ public class MainMenuController implements Initializable {
 
 	@FXML
 	void saveEvent(ActionEvent event) {
+		DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+		Remind remind = new Remind();
 		if (validateInputs()) {
-			DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-			Remind remind = new Remind();
-			remind.setName(eventNameTF.getText());
-			remind.setDescription(eventDescriptionTF.getText());
+			remind.setName(eventNameTF.getText().trim());
+			remind.setDescription(eventDescriptionTF.getText().trim());
 			remind.setDate(eventDateTF.getValue().format(formatters));
 			remind.setTime(eventTimeTF.getTime().toString());
 			String priorityAsString = priorityComboBox.getSelectionModel().getSelectedItem();
@@ -152,22 +163,64 @@ public class MainMenuController implements Initializable {
 			} else {
 				remind.setPriority(Priority.PAS_VRAIMENT);
 			}
-			remindService.addEvent(remind);
 		} else {
-			// TODO
+			if (eventNameTF.getText().trim().isEmpty()) {
+				Alert alert = new Alert(Alert.AlertType.ERROR);
+				alert.setTitle("Reminder");
+				alert.setHeaderText(null);
+				alert.setContentText("You must pick a name for the event");
+				alert.showAndWait();
+				return;
+			} else {
+				remind.setName(eventNameTF.getText().trim());
+				if (eventDescriptionTF.getText().trim().isEmpty()) {
+					remind.setDescription(null);
+				}
+				String priorityAsString = priorityComboBox.getSelectionModel().getSelectedItem();
+				if (priorityAsString != null) {
+					switch (priorityAsString) {
+					case "Urgent":
+						remind.setPriority(Priority.URGENT);
+						break;
+					case "Pas Vraiment":
+						remind.setPriority(Priority.PAS_VRAIMENT);
+						break;
+					case "Normal":
+						remind.setPriority(Priority.NORMAL);
+						break;
+					default:
+						remind.setPriority(Priority.PAS_VRAIMENT);
+						break;
+					}
+				} else {
+					remind.setPriority(Priority.PAS_VRAIMENT);
+				}
+				try {
+					remind.setDate(eventDateTF.getValue().format(formatters));
+				} catch (NullPointerException e) {
+					remind.setDate(null);
+				}
+				try {
+					remind.setTime(eventTimeTF.getTime().toString());
+				} catch (NullPointerException e) {
+					remind.setTime(null);
+				}
+			}
+
 		}
+		remind.setState(State.TODO);
+		remindService.addEvent(remind);
+		backtoMain(event);
+		
 
 	}
 
 	private boolean validateInputs() {
 
-		String eventName = eventNameTF.getText();
+		String eventName = eventNameTF.getText().trim();
 		String priorityAsString = priorityComboBox.getSelectionModel().getSelectedItem();
-		String description = eventDescriptionTF.getText();
-		// String eventDate = eventDateTF.getValue().toString();
-		// String eventTime = eventTimeTF.getTime().toString();
-		return (eventName != null && priorityAsString != null && description != null
-				&& eventDateTF.getValue().toString() != null && eventTimeTF.getTime().toString() != null);
+		String description = eventDescriptionTF.getText().trim();
+		return (eventName != null && priorityAsString != null && description != null);
 	}
 
 	private void switchPanes(String name) {
@@ -188,8 +241,9 @@ public class MainMenuController implements Initializable {
 		VBox content = new VBox(5);
 		ScrollPane scroller = new ScrollPane(content);
 		scroller.setFitToWidth(true);
-		List<Remind> lr = remindService.getAllEvents();
+		List<Remind> lr = remindService.getAllVisibleEvents();
 		for (Remind remind : lr) {
+			ContextMenu cm = createCutomizedContextMenu(remind);
 			AnchorPane anchorPane = new AnchorPane();
 			String style;
 			switch (remind.getPriority()) {
@@ -209,21 +263,34 @@ public class MainMenuController implements Initializable {
 			}
 
 			anchorPane.setStyle(style);
-			Label label = new Label(remind.getName() + "\n" + remind.getDescription());
+			Label label;
+			if (remind.getDescription() != null) {
+				label = new Label(remind.getName() + "\n" + remind.getDescription());
+			} else {
+				label = new Label(remind.getName());
+			}
+
 			label.setTextFill(Color.web("#ffffff"));
 			AnchorPane.setLeftAnchor(label, 5.0);
 			AnchorPane.setTopAnchor(label, 5.0);
-			Button button = new Button("Remove");
-			button.setOnAction(evt -> content.getChildren().remove(anchorPane));
-			AnchorPane.setRightAnchor(button, 5.0);
-			AnchorPane.setTopAnchor(button, 5.0);
-			AnchorPane.setBottomAnchor(button, 5.0);
-			anchorPane.getChildren().addAll(label, button);
-			anchorPane.addEventHandler(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
+			Label status = new Label(remind.getState().getStatus());
+			status.setTextFill(Color.web("#ffffff"));
+			AnchorPane.setRightAnchor(status, 5.0);
+			AnchorPane.setTopAnchor(status, 5.0);
+			AnchorPane.setBottomAnchor(status, 5.0);
+			anchorPane.getChildren().addAll(label, status);
+			anchorPane.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+				@Override
 				public void handle(MouseEvent e) {
-					System.out.println(remind.getIdReminder());
+					if (e.getButton() == MouseButton.SECONDARY) {
+						cm.show(anchorPane, e.getScreenX(), e.getScreenY());
+					} else {
+						remindService.updateEvent(remind);
+						status.setText(remind.getState().getStatus());
+					}
 				}
 			});
+
 			content.getChildren().add(anchorPane);
 		}
 		scroller.setPrefHeight(mainPane.getPrefHeight());
@@ -231,6 +298,33 @@ public class MainMenuController implements Initializable {
 
 		BorderPane borderPane = new BorderPane(scroller, null, null, null, null);
 		mainPane.getChildren().add(borderPane);
+	}
+
+	private ContextMenu createCutomizedContextMenu(Remind remind) {
+		final ContextMenu cm = new ContextMenu();
+		cm.setOnAction(new EventHandler<ActionEvent>() {
+			@Override
+			public void handle(ActionEvent event) {
+				String choice = ((MenuItem) event.getTarget()).getText();
+				switch (choice) {
+				case "Delete":
+					remindService.hideRemind(remind);
+					createAllEventScrollingList();
+					break;
+				case "Update":
+					System.out.println("the choice was to update "+remind.getName());
+					break;
+				default:
+					break;
+				}
+			}
+		});
+		MenuItem menuItem1 = new MenuItem("Delete");
+		MenuItem menuItem2 = new MenuItem("Update");
+
+		cm.getItems().addAll(menuItem1, menuItem2);
+
+		return cm;
 	}
 
 }
