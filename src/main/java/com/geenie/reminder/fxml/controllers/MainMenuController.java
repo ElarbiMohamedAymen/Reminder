@@ -1,6 +1,8 @@
 package com.geenie.reminder.fxml.controllers;
 
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -87,7 +89,12 @@ public class MainMenuController implements Initializable {
 	@FXML
 	private JFXButton backBtn;
 
+	@FXML
+	private JFXButton persistEvent;
+
 	private List<String> stateAsList = new ArrayList<>();
+
+	private Remind remindToUpdate = null;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -130,6 +137,7 @@ public class MainMenuController implements Initializable {
 
 	@FXML
 	void backtoMain(ActionEvent event) {
+		persistEvent.setText("Save");
 		switchPanes(mainPane.getId());
 		resetEventValue();
 		createAllEventScrollingList();
@@ -138,12 +146,25 @@ public class MainMenuController implements Initializable {
 	@FXML
 	void saveEvent(ActionEvent event) {
 		DateTimeFormatter formatters = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-		Remind remind = new Remind();
+		Remind remind;
+		if (remindToUpdate == null) {
+			remind = new Remind();
+		} else {
+			remind = remindToUpdate;
+		}
 		if (validateInputs()) {
 			remind.setName(eventNameTF.getText().trim());
 			remind.setDescription(eventDescriptionTF.getText().trim());
-			remind.setDate(eventDateTF.getValue().format(formatters));
-			remind.setTime(eventTimeTF.getTime().toString());
+			try {
+				remind.setDate(eventDateTF.getValue().format(formatters));
+			} catch (NullPointerException e) {
+				remind.setDate(null);
+			}
+			try {
+				remind.setTime(eventTimeTF.getTime().toString());
+			} catch (NullPointerException e) {
+				remind.setTime(null);
+			}
 			String priorityAsString = priorityComboBox.getSelectionModel().getSelectedItem();
 			if (priorityAsString != null) {
 				switch (priorityAsString) {
@@ -195,32 +216,24 @@ public class MainMenuController implements Initializable {
 				} else {
 					remind.setPriority(Priority.PAS_VRAIMENT);
 				}
-				try {
-					remind.setDate(eventDateTF.getValue().format(formatters));
-				} catch (NullPointerException e) {
-					remind.setDate(null);
-				}
-				try {
-					remind.setTime(eventTimeTF.getTime().toString());
-				} catch (NullPointerException e) {
-					remind.setTime(null);
-				}
 			}
 
 		}
-		remind.setState(State.TODO);
+		if ("Save".equals(persistEvent.getText())) {
+			remind.setState(State.TODO);
+			remindToUpdate = null;
+		}
 		remindService.addEvent(remind);
+		persistEvent.setText("Save");
 		backtoMain(event);
-		
 
 	}
 
 	private boolean validateInputs() {
 
 		String eventName = eventNameTF.getText().trim();
-		String priorityAsString = priorityComboBox.getSelectionModel().getSelectedItem();
 		String description = eventDescriptionTF.getText().trim();
-		return (eventName != null && priorityAsString != null && description != null);
+		return (eventName != null &&  description != null);
 	}
 
 	private void switchPanes(String name) {
@@ -312,12 +325,14 @@ public class MainMenuController implements Initializable {
 					createAllEventScrollingList();
 					break;
 				case "Update":
-					System.out.println("the choice was to update "+remind.getName());
+					cm.hide();
+					updateReminder(remind);
 					break;
 				default:
 					break;
 				}
 			}
+
 		});
 		MenuItem menuItem1 = new MenuItem("Delete");
 		MenuItem menuItem2 = new MenuItem("Update");
@@ -325,6 +340,40 @@ public class MainMenuController implements Initializable {
 		cm.getItems().addAll(menuItem1, menuItem2);
 
 		return cm;
+	}
+
+	private void updateReminder(Remind remind) {
+		remindToUpdate = remind;
+		persistEvent.setText("Update");
+		switchPanes(addEvent.getId());
+		priorityComboBox.getItems().clear();
+		Priority[] states = Priority.class.getEnumConstants();
+		for (Priority state : states) {
+			stateAsList.add(state.getStatus());
+		}
+		Set<String> foo = new HashSet<>(stateAsList);
+		priorityComboBox.getItems().addAll(foo);
+		for (String s : foo) {
+		    if(s.equals(remind.getPriority().getStatus())){
+		    	priorityComboBox.setValue(s);
+		    }
+		}
+		Image image = new Image("/buttons/circled-left-2-25.png");
+		backBtn.setGraphic(new ImageView(image));
+
+		eventNameTF.setText(remind.getName());
+		eventDescriptionTF.setText(remind.getDescription());
+
+		if (remind.getDate() != null) {
+			DateTimeFormatter df = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+			LocalDate eventDate = LocalDate.parse(remind.getDate(), df);
+			eventDateTF.setValue(eventDate);
+		}
+
+		if (remind.getTime() != null) {
+			LocalTime eventTime = LocalTime.parse(remind.getTime());
+			eventTimeTF.setTime(eventTime);
+		}
 	}
 
 }
