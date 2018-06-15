@@ -54,7 +54,7 @@
               </rowConstraints>
                <children>
                   <JFXButton onAction="#clearEvent" prefHeight="25.0" prefWidth="212.0" text="Clear" GridPane.rowIndex="5" />
-                  <JFXButton onAction="#saveEvent" prefHeight="25.0" prefWidth="207.0" text="Save" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                  <JFXButton fx:id="persistEvent" onAction="#saveEvent" prefHeight="25.0" prefWidth="207.0" text="Save" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                   <Label prefHeight="17.0" prefWidth="207.0" text="    Event Name" textAlignment="CENTER" />
                   <Label prefHeight="17.0" prefWidth="210.0" text="    Description" GridPane.rowIndex="4" />
                   <Label prefHeight="17.0" prefWidth="211.0" text="    Event's Date" GridPane.rowIndex="1" />
